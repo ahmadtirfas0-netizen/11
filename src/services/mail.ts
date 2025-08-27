@@ -41,6 +41,11 @@ class MailService {
     });
     return response.data;
   }
+
+  async getAttachmentsByMail(mailId: string) {
+    const response = await apiService.get<ApiResponse<any[]>>(`/attachments/mail/${mailId}`);
+    return response.data.data;
+  }
 }
 
 export const mailService = new MailService();

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { adminService } from '../services/admin';
 import { mailService } from '../services/mail';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
+import FileUpload from '../components/Common/FileUpload';
 import DocumentScanner from '../components/Scanner/DocumentScanner';
 import { useNavigate } from 'react-router-dom';
 import type { Department } from '../types';
@@ -225,63 +226,29 @@ const UploadMailPage: React.FC = () => {
             المرفقات
           </h2>
 
+
           <div className="space-y-4">
-            {/* Upload Area */}
-            <div className="upload-area">
-              <div className="flex items-center justify-center space-x-4 space-x-reverse mb-4">
-                <button
-                  type="button"
-                  onClick={() => setShowScanner(true)}
-                  className="btn btn-secondary flex items-center gap-2"
-                >
-                  <Scan className="w-5 h-5" />
-                  مسح ضوئي
-                </button>
-                <span className="text-gray-400">أو</span>
-              </div>
-              <input
-                type="file"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-                id="file-upload"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-900 mb-2">
-                  اسحب الملفات هنا أو انقر للاختيار
-                </p>
-                <p className="text-sm text-gray-500">
-                  يدعم PDF, DOC, DOCX, JPG, PNG (حد أقصى 10 ميجابايت لكل ملف)
-                </p>
-              </label>
+            {/* Scanner Button */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Scan className="w-5 h-5" />
+                مسح ضوئي للمستندات
+              </button>
             </div>
 
-            {/* Selected Files */}
-            {selectedFiles.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-medium text-gray-900">الملفات المحددة:</h3>
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <FileIcon className="w-5 h-5 text-blue-600 ml-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="text-red-600 hover:text-red-700 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* File Upload Component */}
+            <FileUpload
+              onFilesSelected={(files) => setSelectedFiles(prev => [...prev, ...files])}
+              selectedFiles={selectedFiles}
+              onRemoveFile={removeFile}
+              maxFiles={10}
+              maxFileSize={10 * 1024 * 1024}
+              acceptedTypes={['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png']}
+            />
           </div>
         </div>
 

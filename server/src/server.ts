@@ -15,6 +15,8 @@ import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
 import mailRoutes from './routes/mails';
 import adminRoutes from './routes/admin';
+import referralRoutes from './routes/referrals';
+import attachmentRoutes from './routes/attachments';
 
 // Load environment variables
 dotenv.config();
@@ -86,6 +88,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/mails', mailRoutes);
 app.use('/api', adminRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/attachments', attachmentRoutes);
 
 // Socket.IO authentication middleware
 io.use((socket, next) => {

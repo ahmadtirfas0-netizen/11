@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Clock, Eye, CheckCircle, FileText as FileIcon, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { referralService } from '../services/referrals';
 import StatusBadge from '../components/Common/StatusBadge';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import type { Referral, Comment } from '../types';
@@ -20,37 +21,10 @@ const ReferralsPage: React.FC = () => {
 
   const loadReferrals = async () => {
     try {
-      // Mock data - in real app, this would come from API
-      const mockReferrals: Referral[] = [
-        {
-          id: '1',
-          mailId: 'mail-1',
-          sectionId: user?.sectionId || '',
-          status: 'Pending',
-          createdAt: '2024-01-15T10:00:00Z',
-          updatedAt: '2024-01-15T10:00:00Z',
-          section: {
-            id: user?.sectionId || '',
-            name: user?.section?.name || 'قسم تقنية المعلومات',
-            departmentId: user?.departmentId || ''
-          }
-        },
-        {
-          id: '2',
-          mailId: 'mail-2',
-          sectionId: user?.sectionId || '',
-          status: 'Viewed',
-          createdAt: '2024-01-14T14:30:00Z',
-          updatedAt: '2024-01-14T15:00:00Z',
-          section: {
-            id: user?.sectionId || '',
-            name: user?.section?.name || 'قسم تقنية المعلومات',
-            departmentId: user?.departmentId || ''
-          }
-        }
-      ];
-      
-      setReferrals(mockReferrals);
+      if (user?.sectionId) {
+        const response = await referralService.getReferralsBySection(user.sectionId);
+        setReferrals(response.data);
+      }
     } catch (error) {
       console.error('Error loading referrals:', error);
     } finally {
@@ -61,25 +35,24 @@ const ReferralsPage: React.FC = () => {
   const handleReferralClick = async (referral: Referral) => {
     setSelectedReferral(referral);
     
-    // Mock comments data
-    const mockComments: Comment[] = [
-      {
-        id: '1',
-        referralId: referral.id,
-        userId: user?.id || '',
-        text: 'تم مراجعة المراسلة وهي تحتاج إلى موافقة إضافية من الإدارة العليا',
-        createdAt: '2024-01-15T11:00:00Z',
-        user: user
-      }
-    ];
-    
-    setComments(mockComments);
+    try {
+      const commentsData = await referralService.getCommentsByReferral(referral.id);
+      setComments(commentsData);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+      setComments([]);
+    }
     
     // Update status to viewed if it was pending
     if (referral.status === 'Pending') {
-      setReferrals(prev => prev.map(r => 
-        r.id === referral.id ? { ...r, status: 'Viewed' as const } : r
-      ));
+      try {
+        await referralService.updateReferralStatus(referral.id, 'Viewed');
+        setReferrals(prev => prev.map(r => 
+          r.id === referral.id ? { ...r, status: 'Viewed' as const } : r
+        ));
+      } catch (error) {
+        console.error('Error updating referral status:', error);
+      }
     }
   };
 
@@ -89,15 +62,8 @@ const ReferralsPage: React.FC = () => {
 
     setIsSubmittingComment(true);
     try {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        referralId: selectedReferral.id,
-        userId: user?.id || '',
-        text: newComment,
-        createdAt: new Date().toISOString(),
-        user: user
-      };
 
+      const comment = await referralService.addComment(selectedReferral.id, newComment);
       setComments(prev => [...prev, comment]);
       setNewComment('');
     } catch (error) {
@@ -109,6 +75,7 @@ const ReferralsPage: React.FC = () => {
 
   const markAsCompleted = async (referralId: string) => {
     try {
+      await referralService.updateReferralStatus(referralId, 'Completed');
       setReferrals(prev => prev.map(r => 
         r.id === referralId ? { ...r, status: 'Completed' as const } : r
       ));
